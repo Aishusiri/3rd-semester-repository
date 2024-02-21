@@ -1,0 +1,39 @@
+So while fork() makes processes, exec() loads programs into processes that already exist. In Code:
+#include <stdio.h> 
+#include <unistd.h> 
+#include <stdlib.h> 
+#include <sys/types.h> 
+#include <sys/wait.h> 
+
+main(void) 
+{ pid\_t pid = 0;
+ int status; pid = fork(); 
+if (pid == 0)
+ { 
+printf("I am the child.\\n"); 
+execl("/bin/ls", "ls", "-l", "/tmp/kris", (char \*) 0); 
+perror("In exec(): "); 
+} 
+if (pid > 0) 
+{ 
+printf("I am the parent, and the child is %d.\\n", pid);
+ pid = wait(&status);
+ printf("End of process %d: ", pid);
+ if (WIFEXITED(status)) 
+{ printf("The process ended with exit(%d).\\n", WEXITSTATUS(status)); 
+} 
+if (WIFSIGNALED(status)) 
+{ 
+printf("The process ended with kill -%d.\\n", WTERMSIG(status)); } 
+}
+ if (pid < 0) 
+{ 
+perror("In fork():"); }
+exit(0); } 
+
+The runtime protocol:
+
+kris@linux:/tmp/kris> make probe3 cc probe3.c -o probe3 kris@linux:/tmp/kris> ./probe3 
+I am the child. 
+I am the parent, the child is 17690. total 36 -rwxr-xr-x 1 kris users 6984 2007-01-05 13:29 probe1 -rw-r--r-- 1 kris users 303 2007-01-05 13:36 probe1.c -rwxr-xr-x 1 kris users 7489 2007-01-05 13:37 probe2 -rw-r--r-- 1 kris users 719 2007-01-05 13:40 probe2.c -rwxr-xr-x 1 kris users 7513 2007-01-05 13:42 probe3 -rw-r--r-- 1 kris users 728 2007-01-05 13:42 probe3.
+c End of process 17690: The process ended with exit(0).
